@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+# The real event log is not committed (check the data licence before sharing it)
+data/real/*
+!data/real/.gitkeep
+outputs/*
+!outputs/.gitkeep
+!data/real/README.md
