@@ -4,19 +4,51 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-app-FF4B4B?logo=streamlit&logoColor=white)
 ![Data](https://img.shields.io/badge/Data-BPI%20Challenge%202012-6C5CE7)
 
-**UnJam untangles a bank loan process.** It reads a real event log (which step happened to which loan application,
-and when) and answers four questions a bank operations manager actually asks:
+## Business problem
+
+A bank operations manager cannot easily see where loan applications wait, which steps are repeated, and which steps are routine enough to automate. **UnJam turns a real event log into answers, and into documented requirements.**
+
+**My role:** I acted as the business analyst. I turned four business questions into a BRD, a functional specification, use cases, user stories, test cases with traceability, and a working analysis tool.
+
+<!-- Add a screenshot of the As-is map or Bottlenecks tab here, then delete this comment:
+![UnJam as-is process map](docs/images/as-is-map.png)
+-->
+
+## Requirements deliverables
+
+| Document | What it shows |
+|---|---|
+| [BRD](docs/BRD.md) | Business needs, stakeholders, rules, risks |
+| [FSD](docs/FSD.md) | 21 functional requirements (FR-01 to FR-21), formulas, definitions |
+| [Use Cases](docs/USE_CASES.md) | Five use cases |
+| [User Stories](docs/USER_STORIES.md) | User stories with acceptance criteria |
+| [Process Flows](docs/PROCESS_FLOWS.md) | Improvement process today vs with UnJam |
+| [Test Cases & Traceability](docs/TEST_CASES.md) | 30 test cases mapped to requirements |
+| [Stakeholder Questions](docs/STAKEHOLDER_QUESTIONS.md) | Interview guide for loan officer, ops manager, risk |
+| [Project Spec](docs/PROJECT_SPEC.md) | One-page brief of the whole project |
+
+## Key findings (BPI Challenge 2012, about 13,000 applications)
+
+- [FINDING 1: the slowest step and its median / p90 wait]
+- [FINDING 2: share of cases with rework and hours spent on repeats]
+- [FINDING 3: estimated saving from the to-be scenario, under the stated 50% assumption]
+
+Full results: [docs/RESULTS.md](docs/RESULTS.md) · Process maps: [docs/PROCESS_MAPS.md](docs/PROCESS_MAPS.md)
+
+> **Data note:** BPI Challenge 2012 is a real, anonymised loan / overdraft application log from a Dutch financial institution. It is a **proxy process**, not a Bangladeshi bank. Savings are assumption-based estimates, not measured results.
+
+---
+
+## What UnJam does
+
+**UnJam untangles a bank loan process.** It reads a real event log (which step happened to which loan application, and when) and answers four questions a bank operations manager actually asks:
 
 1. **Where do applications wait?** (bottlenecks)
 2. **Which steps are repeated?** (rework)
 3. **How do applications end, and where do cancelled ones get stuck?** (outcomes)
 4. **Which steps are routine enough for rule-based automation, and what would it save?** (automation + to-be estimate)
 
-No prediction model is trained. All numbers come from plain, testable pandas code. An optional AI layer (Gemini)
-only *explains* the computed numbers, and a guard flags any number it makes up.
-
-> **Data:** BPI Challenge 2012, a real, anonymised loan / overdraft application log from a Dutch financial
-> institution (about 13,000 applications). It is a **proxy process**, not a Bangladeshi bank.
+No prediction model is trained. All numbers come from plain, testable pandas code. An optional AI layer (Gemini) only *explains* the computed numbers, and a guard flags any number it makes up.
 
 ---
 
@@ -109,6 +141,29 @@ The three thresholds of the second question are sliders in the sidebar.
 | **Report & Ask** | Findings, recommendations, FSD draft, question box answered only from the results |
 | **Checks** | Reconciliation and consistency checks of the numbers |
 
+## Rules in one place
+
+Full detail in [`docs/FSD.md`](docs/FSD.md).
+
+- **Wait** of a step = gap between the end of the latest earlier work in the case and the start of the step. Never negative.
+- **Automation score** = 100 x volume x repetition x waiting time, each scaled from 0 to 1.
+- **Automation candidate** = busy and slow and predictable, and not a decision step.
+- **To-be estimate** = automated steps wait X% less (default 50%) and repeated runs are removed. It is an assumption, not a measured result.
+- **AI text** may only restate computed numbers. Anything else is flagged as unverified.
+
+## Limitations
+
+- Proxy data from another country and bank; process, volumes and regulation differ.
+- Waiting time includes nights and weekends (no working-calendar correction).
+- Savings are assumption-based estimates; a pilot is needed to measure the real effect.
+- Decision steps are recognised by keywords in their names.
+- Only timing and sequence are analysed (no loan amounts or customer attributes).
+- Every recommendation needs validation by a process owner. Details: [`docs/AI_LIMITATIONS.md`](docs/AI_LIMITATIONS.md).
+
+Other documents: [`docs/AI_LIMITATIONS.md`](docs/AI_LIMITATIONS.md) (where AI is used, hallucination guard, privacy, fairness) · [`docs/AI_USAGE_LOG.md`](docs/AI_USAGE_LOG.md) (how AI assistants were used to build this)
+
+---
+
 ## Quick start
 
 **Windows, easiest:** double-click `run_windows.bat`.
@@ -142,37 +197,13 @@ python export_report.py
 
 Writes `outputs/` (report, facts, CSV tables, Mermaid diagrams) and generates
 `docs/RESULTS.md` (findings on the real log) and `docs/PROCESS_MAPS.md`
-(discovered as-is and to-be maps). These two files appear after the first run.
+(discovered as-is and to-be maps).
 
 ### Optional: AI wording with Gemini
 
 Copy `.env.example` to `.env`, add `GEMINI_API_KEY`, then switch on *Use Gemini to explain the facts* in the sidebar
 (or run `python export_report.py --llm`). Without a key the text is written by rules. Only aggregated facts are sent,
 never raw events.
-
-## Rules in one place
-
-Full detail in [`docs/FSD.md`](docs/FSD.md).
-
-- **Wait** of a step = gap between the end of the latest earlier work in the case and the start of the step. Never negative.
-- **Automation score** = 100 x volume x repetition x waiting time, each scaled from 0 to 1.
-- **Automation candidate** = busy and slow and predictable, and not a decision step.
-- **To-be estimate** = automated steps wait X% less (default 50%) and repeated runs are removed. It is an assumption, not a measured result.
-- **AI text** may only restate computed numbers. Anything else is flagged as unverified.
-
-## Documents
-
-| Document | Purpose |
-|---|---|
-| [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md) | One-page brief of the whole project |
-| [`docs/BRD.md`](docs/BRD.md) | Business requirements, stakeholders, rules, risks |
-| [`docs/FSD.md`](docs/FSD.md) | Functional requirements FR-01 to FR-21, formulas, definitions |
-| [`docs/USE_CASES.md`](docs/USE_CASES.md) | Five use cases |
-| [`docs/PROCESS_FLOWS.md`](docs/PROCESS_FLOWS.md) | Improvement process today vs with UnJam |
-| [`docs/TEST_CASES.md`](docs/TEST_CASES.md) | 30 test cases and traceability matrix |
-| [`docs/AI_LIMITATIONS.md`](docs/AI_LIMITATIONS.md) | Where AI is used, hallucination guard, privacy, fairness |
-| [`docs/AI_USAGE_LOG.md`](docs/AI_USAGE_LOG.md) | How AI assistants were used to build this |
-| [`docs/STAKEHOLDER_QUESTIONS.md`](docs/STAKEHOLDER_QUESTIONS.md) | Interview guide for loan officer, ops manager, risk |
 
 ## Tests
 
@@ -204,15 +235,6 @@ tests/                  pytest suite
 docs/                   BRD, FSD, use cases, test cases, AI notes
 data/real/              put the real event log here (git-ignored)
 ```
-
-## Limitations
-
-- Proxy data from another country and bank; process, volumes and regulation differ.
-- Waiting time includes nights and weekends (no working-calendar correction).
-- Savings are assumption-based estimates; a pilot is needed to measure the real effect.
-- Decision steps are recognised by keywords in their names.
-- Only timing and sequence are analysed (no loan amounts or customer attributes).
-- Every recommendation needs validation by a process owner. Details: [`docs/AI_LIMITATIONS.md`](docs/AI_LIMITATIONS.md).
 
 ## Data citation
 
